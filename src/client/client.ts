@@ -72,14 +72,22 @@ function init() {
 
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
-
+    const warnaMerah = 0xff0000
+    const warnaHijau = 0x00ff00
     const cubes = []
     const jarakY = 90 // Jarak antara kubus-kubus pada sumbu Y
     let isCubeRed = false // Menyimpan status warna kubus
 
-    for (let i = 0; i < 21; i++) {
+    for (let i = 0; i <= 20; i++) {
         const geometry1 = new THREE.BoxGeometry(482, 88.3, 562)
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+        let color = warnaHijau // hijau
+
+        // Periksa apakah indeks sama dengan 0, 4, 7, atau 10, jika ya, ubah warnanya menjadi merah
+        if (i === 0 || i === 4 || i === 7 || i === 10) {
+            color = warnaMerah // Warna merah
+        }
+
+        const material = new THREE.MeshLambertMaterial({ color })
         const cube = new THREE.Mesh(geometry1, material)
 
         // Set posisi kubus
@@ -88,6 +96,7 @@ function init() {
         cube.userData.index = i // Tambahkan atribut indeks ke setiap kubus
         cubes.push(cube)
         scene.add(cube)
+
         // Membuat objek garis (outline) untuk kubus
         const edgesGeometry = new THREE.EdgesGeometry(cube.geometry)
         const edgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }) // Warna hitam
@@ -96,7 +105,7 @@ function init() {
         scene.add(edgesLine)
     }
 
-    // Tambahkan event listener untuk mendeteksi klik pada kubus
+    // Klik
     document.addEventListener('click', (event) => {
         // Mendapatkan posisi klik mouse dalam koordinat normalized device coordinates (NDC)
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1
@@ -123,84 +132,43 @@ function init() {
         }
     })
 
-    // const raycaster = new THREE.Raycaster()
-    // const mouse = new THREE.Vector2()
+    // SOROT
+    document.addEventListener('mousemove', (event) => {
+        // Mendapatkan posisi mouse dalam koordinat normalized device coordinates (NDC)
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
-    // const cubes = []
-    // const jarakY = 300 // Jarak antara kubus-kubus pada sumbu Y
+        // Lakukan raycasting untuk mendeteksi objek yang disorot oleh kursor
+        raycaster.setFromCamera(mouse, camera)
 
-    // for (let i = 0; i < 5; i++) {
-    //     const geometry1 = new THREE.BoxGeometry(1000, 200, 1000)
-    //     const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-    //     const cube = new THREE.Mesh(geometry1, material)
+        const intersects = raycaster.intersectObjects(cubes)
 
-    //     // Set posisi kubus
-    //     cube.position.set(100, 300 + i * jarakY, 100)
+        if (intersects.length > 0) {
+            const hoveredObject = intersects[0].object as THREE.Mesh
+            const hoveredIndex = hoveredObject.userData.index
 
-    //     cube.userData.index = i // Tambahkan atribut indeks ke setiap kubus
-    //     cubes.push(cube)
-    //     scene.add(cube)
-    // }
+            let status = 'unknown'
 
-    // // Tambahkan event listener untuk mendeteksi klik pada kubus
-    // document.addEventListener('click', (event) => {
-    //     // Mendapatkan posisi klik mouse dalam koordinat normalized device coordinates (NDC)
-    //     mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-    //     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+            // Periksa apakah objek material adalah THREE.MeshLambertMaterial
+            if (hoveredObject.material instanceof THREE.MeshLambertMaterial) {
+                const material = hoveredObject.material as THREE.MeshLambertMaterial
 
-    //     // Lakukan raycasting untuk mendeteksi objek yang diklik
-    //     raycaster.setFromCamera(mouse, camera)
+                // Bandingkan warna dengan kode warna merah
+                if (material.color.equals(new THREE.Color(warnaMerah))) {
+                    status = 'used'
+                } else if (material.color.equals(new THREE.Color(warnaHijau))) {
+                    status = 'available'
+                }
+            }
+            const infoDiv = document.getElementById('info')
+            infoDiv.textContent = `Rack 1 ${hoveredIndex} (${status})`
+        } else {
+            const infoDiv = document.getElementById('info')
+            infoDiv.textContent = ''
+        }
+    })
 
-    //     const intersects = raycaster.intersectObjects(cubes)
-
-    //     if (intersects.length > 0) {
-    //         const clickedCube = intersects[0].object
-    //         const clickedIndex = clickedCube.userData.index
-
-    //         // Cetak indeks kubus ke konsol
-    //         console.log(clickedIndex)
-    //     }
-    // })
-
-    //=================================START RACK 1===================================
-    // const kerangkaSize = new THREE.BoxGeometry(500, 1255, 700)
-    // const kerangka = new THREE.EdgesGeometry(kerangkaSize)
-    // const lineMaterial = new THREE.LineBasicMaterial({
-    //     color: 0x0531f7,
-    //     linewidth: 3,
-    // })
-    // const kerangkaLine = new THREE.LineSegments(kerangka, lineMaterial)
-    // kerangkaLine.position.set(250, 420, -900)
-    // scene.add(kerangkaLine)
-
-    // const cubeSize = new THREE.BoxGeometry(500, 20, 700)
-    // // Array untuk menyimpan semua objek kubus
-    // const cubes = []
-    // const hijau = new THREE.MeshLambertMaterial({ color: 0x3dad53 })
-    // const merah = new THREE.MeshLambertMaterial({ color: 0xf74605 })
-
-    // // Menggunakan loop untuk membuat 42 buah kubus
-    // for (let i = 0; i < 42; i++) {
-    //     const cube = new THREE.Mesh(cubeSize, hijau)
-    //     cube.position.set(250, -190 + i * 30, -900) // Sesuaikan posisi vertikal (sumbu y) untuk kubus
-
-    //     if (i === 9 || i === 19 || i === 29 || i === 39) {
-    //         cube.material = merah
-    //     }
-
-    //     cubes.push(cube) // Menambahkan kubus ke dalam array
-    //     scene.add(cube) // Menambahkan kubus ke dalam scene
-
-    //     // Membuat objek garis (outline) untuk kubus
-    //     const edgesGeometry = new THREE.EdgesGeometry(cube.geometry)
-    //     const edgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }) // Warna hitam
-    //     const edgesLine = new THREE.LineSegments(edgesGeometry, edgesMaterial)
-    //     edgesLine.position.copy(cube.position)
-    //     scene.add(edgesLine)
-    // }
-    //=================================END RACK 1===================================
-
-    //floor
+    //GRID
     const helper = new THREE.GridHelper(10000, 60)
     helper.position.y = -199
     helper.material.opacity = 0.25
