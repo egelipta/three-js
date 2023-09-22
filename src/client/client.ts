@@ -72,14 +72,22 @@ function init() {
 
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
-
+    const warnaMerah = 0xff0000
+    const warnaHijau = 0x00ff00
     const cubes = []
     const jarakY = 90 // Jarak antara kubus-kubus pada sumbu Y
     let isCubeRed = false // Menyimpan status warna kubus
 
-    for (let i = 0; i < 21; i++) {
+    for (let i = 0; i <= 20; i++) {
         const geometry1 = new THREE.BoxGeometry(482, 88.3, 562)
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+        let color = warnaHijau // hijau
+
+        // Periksa apakah indeks sama dengan 0, 4, 7, atau 10, jika ya, ubah warnanya menjadi merah
+        if (i === 0 || i === 4 || i === 7 || i === 10) {
+            color = warnaMerah // Warna merah
+        }
+
+        const material = new THREE.MeshLambertMaterial({ color })
         const cube = new THREE.Mesh(geometry1, material)
 
         // Set posisi kubus
@@ -88,6 +96,7 @@ function init() {
         cube.userData.index = i // Tambahkan atribut indeks ke setiap kubus
         cubes.push(cube)
         scene.add(cube)
+
         // Membuat objek garis (outline) untuk kubus
         const edgesGeometry = new THREE.EdgesGeometry(cube.geometry)
         const edgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }) // Warna hitam
@@ -96,9 +105,34 @@ function init() {
         scene.add(edgesLine)
     }
 
-    const cubeColors = Array.from({ length: 21 }, () => 0x00ff00) // Awalnya semua kubus berwarna hijau
+    // Klik
+    document.addEventListener('click', (event) => {
+        // Mendapatkan posisi klik mouse dalam koordinat normalized device coordinates (NDC)
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
-    // Tambahkan event listener untuk mendeteksi hover pada kubus
+        // Lakukan raycasting untuk mendeteksi objek yang diklik
+        raycaster.setFromCamera(mouse, camera)
+
+        const intersects = raycaster.intersectObjects(cubes)
+
+        if (intersects.length > 0) {
+            const clickedCube = intersects[0].object
+            const clickedIndex = clickedCube.userData.index
+
+            if (isCubeRed) {
+                cubes[clickedIndex].material.color.set(0x00ff00)
+            } else {
+                cubes[clickedIndex].material.color.set(0xff0000)
+            }
+
+            isCubeRed = !isCubeRed
+            render()
+            console.log(clickedIndex)
+        }
+    })
+
+    // SOROT
     document.addEventListener('mousemove', (event) => {
         // Mendapatkan posisi mouse dalam koordinat normalized device coordinates (NDC)
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1
@@ -110,23 +144,31 @@ function init() {
         const intersects = raycaster.intersectObjects(cubes)
 
         if (intersects.length > 0) {
-            const hoveredObject = intersects[0].object as THREE.Mesh // Explicit type casting
+            const hoveredObject = intersects[0].object as THREE.Mesh
             const hoveredIndex = hoveredObject.userData.index
 
-            // Tampilkan informasi "Index ke n used" di dalam elemen div dengan id "info"
-            const infoDiv = document.getElementById('info')
-            infoDiv.textContent = `Rack 1 ${hoveredIndex} used`
+            let status = 'unknown'
 
-            // Di sini Anda dapat melakukan tindakan lain sesuai dengan objek yang disorot.
-            // Misalnya, Anda dapat mengganti teks atau menampilkan informasi lain di elemen div ini.
+            // Periksa apakah objek material adalah THREE.MeshLambertMaterial
+            if (hoveredObject.material instanceof THREE.MeshLambertMaterial) {
+                const material = hoveredObject.material as THREE.MeshLambertMaterial
+
+                // Bandingkan warna dengan kode warna merah
+                if (material.color.equals(new THREE.Color(warnaMerah))) {
+                    status = 'used'
+                } else if (material.color.equals(new THREE.Color(warnaHijau))) {
+                    status = 'available'
+                }
+            }
+            const infoDiv = document.getElementById('info')
+            infoDiv.textContent = `Rack 1 ${hoveredIndex} (${status})`
         } else {
-            // Jika tidak ada objek yang disorot, hapus teks dari elemen div
             const infoDiv = document.getElementById('info')
             infoDiv.textContent = ''
         }
     })
 
-    //floor
+    //GRID
     const helper = new THREE.GridHelper(10000, 60)
     helper.position.y = -199
     helper.material.opacity = 0.25
