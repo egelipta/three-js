@@ -94,7 +94,6 @@ function init() {
     const outlineRack = new THREE.LineSegments(edgesRack, outlineMaterialRack)
 
     cubeRack.add(outlineRack)
-
     scene.add(cubeRack)
 
     // ===================================================
