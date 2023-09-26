@@ -33,8 +33,6 @@ const params = {
     removePoint: removePoint,
 }
 
-let selectedCube = null
-
 init()
 
 function init() {
@@ -103,17 +101,18 @@ function init() {
     // ===================================================
 
     // ===================U/DEVICE========================
-    const jumlahCubeDevice = 5 // Jumlah cubeDevice
-    const spacingY = 100 // Jarak antara cubeDevice
+    const jumlahCubeDevice = 4 // Jumlah cubeDevice
+    const spacingY = 50 // Jarak antara cubeDevice
     const lebarDevice = 482
     const tinggiDevice = 44.2
     const panjangDevice = 562
+    const warnaDevice = 0x6d6b6e
 
     const cubes = []
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
 
-    function onMouseClick(event) {
+    function onMouseClick(event: { clientX: number; clientY: number }) {
         // Hitung koordinat mouse dalam koordinat WebGL
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
@@ -133,29 +132,69 @@ function init() {
 
     document.addEventListener('click', onMouseClick, false)
 
+    // Fungsi untuk membuat device dengan tekstur hanya di sisi depan
+    function createFrontTexturedCube(
+        width: number,
+        height: number,
+        depth: number,
+        positionX: number,
+        positionY: number,
+        positionZ: number,
+        texturePath: string
+    ) {
+        // Membuat device
+        const geometryDevice = new THREE.BoxGeometry(width, height, depth)
+
+        // Membuat material untuk sisi depan dengan tekstur
+        const textureDevice = new THREE.TextureLoader().load(texturePath)
+        const materialFront = new THREE.MeshBasicMaterial({ map: textureDevice })
+
+        // Membuat material default (tanpa tekstur) untuk sisi lainnya
+        const materialBack = new THREE.MeshBasicMaterial({ color: warnaDevice })
+
+        // Menggunakan array material untuk menerapkan material ke semua sisi kubus
+        const materials = [
+            materialBack,
+            materialBack,
+            materialBack,
+            materialBack,
+            materialFront,
+            materialBack,
+        ]
+
+        const cubeDevice = new THREE.Mesh(geometryDevice, materials)
+        cubeDevice.position.set(positionX, positionY, positionZ)
+        scene.add(cubeDevice)
+
+        // Membuat garis tepi (outline) untuk device
+        const edges = new THREE.EdgesGeometry(geometryDevice)
+        const outlineMaterial = new THREE.LineBasicMaterial({
+            color: 0x000000, // Warna hitam
+            linewidth: 1,
+        })
+        const outline = new THREE.LineSegments(edges, outlineMaterial)
+
+        cubeDevice.add(outline)
+
+        cubes.push(cubeDevice)
+    }
+
     for (let i = 0; i < jumlahCubeDevice; i++) {
         const posLeftRightDev = 0
         const posTopBottomDev = -150 + i * spacingY // Sesuaikan posisi Y sesuai indeks
         const posFrontBackDev = -300
 
-        const warnaDevice = 0x919091 // abu-abu
+        const texturePath = 'images/c.jpg' // Path ke gambar tekstur
 
-        const geometryDevice = new THREE.BoxGeometry(lebarDevice, tinggiDevice, panjangDevice) // 482, 88.4, 562
-        const materialDevice = new THREE.MeshBasicMaterial({ color: warnaDevice })
-        const cubeDevice = new THREE.Mesh(geometryDevice, materialDevice)
-        cubeDevice.position.set(posLeftRightDev, posTopBottomDev, posFrontBackDev)
-        scene.add(cubeDevice)
-
-        // Membuat tepi (outline) untuk device
-        const edgesDevice = new THREE.EdgesGeometry(geometryDevice)
-        const outlineMaterialDevice = new THREE.LineBasicMaterial({
-            color: 0x000000, // Warna hitam
-            linewidth: 1,
-        })
-        const outlineDevice = new THREE.LineSegments(edgesDevice, outlineMaterialDevice)
-
-        cubeDevice.add(outlineDevice)
-        cubes.push(cubeDevice)
+        createFrontTexturedCube(
+            lebarDevice,
+            tinggiDevice,
+            panjangDevice,
+            posLeftRightDev,
+            posTopBottomDev,
+            posFrontBackDev,
+            texturePath
+        )
     }
 
     // ===================================================
