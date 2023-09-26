@@ -61,12 +61,18 @@ function init() {
     // scene.add(light)
 
     // ========================RACK=======================
+    const posTopBottomRack = 755
+    const posLeftRightRack = 0
+    const posFrontBackRack = -600
+    const warnaRack = 0x000000
+
     const geometryRack = new THREE.BoxGeometry(600, 1900, 1200)
     const materialRack = new THREE.MeshBasicMaterial({
-        color: 0x0a0a0a,
+        color: warnaRack,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.6,
     })
+
     const pintu = new THREE.MeshBasicMaterial({
         color: 0x0a0a0a,
         transparent: true,
@@ -81,100 +87,15 @@ function init() {
         pintu, // Back
     ]
     const cubeRack = new THREE.Mesh(geometryRack, materialsRack)
-    scene.add(cubeRack)
+    cubeRack.position.set(posLeftRightRack, posTopBottomRack, posFrontBackRack)
 
-    // Membuat garis tepi (outline) untuk rack
     const edgesRack = new THREE.EdgesGeometry(geometryRack)
-    const outlineMaterialRack = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 })
+    const outlineMaterialRack = new THREE.LineBasicMaterial({ color: warnaRack, linewidth: 1 })
     const outlineRack = new THREE.LineSegments(edgesRack, outlineMaterialRack)
 
-    // Atur posisi rack
-    cubeRack.position.set(0, 750, -900)
     cubeRack.add(outlineRack)
-    // ===================================================
 
-    // =====================U/DEVICE======================
-    const deviceCount = 5 // Jumlah device
-    const spacingY = 95 // Jarak antara device
-
-    const cubes = []
-
-    // Pengaturan raycaster dan mouse vector
-    const raycaster = new THREE.Raycaster()
-    const mouse = new THREE.Vector2()
-
-    // Fungsi untuk mengubah warna objek menjadi biru
-    let selectedCubeIndex = -1 // Inisialisasi dengan nilai -1 yang menunjukkan tidak ada objek yang dipilih awalnya
-
-    // Fungsi untuk mengubah warna objek menjadi biru
-    function selectObject(index) {
-        if (selectedCubeIndex !== -1) {
-            // Kembalikan warna objek yang dipilih sebelumnya ke warna semula (0x878b91)
-            const previousSelectedCube = cubes[selectedCubeIndex]
-            const previousMaterial = previousSelectedCube.material as THREE.MeshBasicMaterial
-            previousMaterial.color.set(0x878b91)
-        }
-
-        // Ubah warna objek yang baru dipilih menjadi biru (0x0000ff)
-        const selectedCube = cubes[index]
-        const material = selectedCube.material as THREE.MeshBasicMaterial
-        material.color.set(0x0000ff)
-
-        // Simpan indeks objek yang baru dipilih
-        selectedCubeIndex = index
-    }
-
-    // Fungsi untuk mengatur event klik
-    function onClick(event) {
-        // Menghitung posisi mouse dalam koordinat dunia
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-
-        // Perbarui raycaster
-        raycaster.setFromCamera(mouse, camera)
-
-        // Dapatkan semua objek yang terkena oleh ray
-        const intersects = raycaster.intersectObjects(cubes)
-
-        if (intersects.length > 0) {
-            const selectedObject = intersects[0].object
-            const selectedCubeIndex = cubes.indexOf(selectedObject)
-            selectObject(selectedCubeIndex)
-            console.log('selected', selectedCubeIndex)
-        } else {
-            // Klik di luar objek, kembalikan semua objek ke warna semula
-            cubes.forEach((cube, index) => {
-                const material = cube.material as THREE.MeshBasicMaterial
-                material.color.set(0x878b91)
-            })
-            selectedCubeIndex = -1 // Tidak ada objek yang dipilih
-        }
-    }
-
-    // Tambahkan event listener klik ke window
-    window.addEventListener('click', onClick, true)
-
-    for (let i = 0; i < deviceCount; i++) {
-        const geometryDevice = new THREE.BoxGeometry(482, 88.3, 562)
-        const materialDevice = new THREE.MeshBasicMaterial({
-            color: 0x878b91,
-        })
-        const cubeDevice = new THREE.Mesh(geometryDevice, materialDevice)
-        scene.add(cubeDevice)
-
-        // Membuat garis tepi (outline) untuk device
-        const edgesDevice = new THREE.EdgesGeometry(geometryDevice)
-        const outlineMaterialDevice = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 })
-        const outlineDevice = new THREE.LineSegments(edgesDevice, outlineMaterialDevice)
-
-        // Atur posisi device
-        const offsetY = -155 + i * spacingY // Sesuaikan posisi Y sesuai indeks
-        cubeDevice.position.set(0, offsetY, -600)
-
-        cubeDevice.add(outlineDevice)
-
-        cubes.push(cubeDevice)
-    }
+    scene.add(cubeRack)
 
     // ===================================================
 
@@ -243,12 +164,6 @@ function init() {
     for (let i = 0; i < splinePointsLength; i++) {
         positions.push(splineHelperObjects[i].position)
     }
-
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute(
-        'position',
-        new THREE.BufferAttribute(new Float32Array(ARC_SEGMENTS * 3), 3)
-    )
 
     for (const k in splines) {
         const spline = splines[k]
