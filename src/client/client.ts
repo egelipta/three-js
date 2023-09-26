@@ -105,6 +105,33 @@ function init() {
     // ===================U/DEVICE========================
     const jumlahCubeDevice = 5 // Jumlah cubeDevice
     const spacingY = 100 // Jarak antara cubeDevice
+    const lebarDevice = 482
+    const tinggiDevice = 44.2
+    const panjangDevice = 562
+
+    const cubes = []
+    const raycaster = new THREE.Raycaster()
+    const mouse = new THREE.Vector2()
+
+    function onMouseClick(event) {
+        // Hitung koordinat mouse dalam koordinat WebGL
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+
+        // Perbarui raycaster
+        raycaster.setFromCamera(mouse, camera)
+
+        // Cari objek yang diklik
+        const intersects = raycaster.intersectObjects(cubes)
+
+        // Jika ada objek yang diklik, tampilkan informasi di konsol
+        if (intersects.length > 0) {
+            const clickedObject = intersects[0].object
+            console.log('Clicked ' + cubes.indexOf(clickedObject))
+        }
+    }
+
+    document.addEventListener('click', onMouseClick, false)
 
     for (let i = 0; i < jumlahCubeDevice; i++) {
         const posLeftRightDev = 0
@@ -113,7 +140,7 @@ function init() {
 
         const warnaDevice = 0x919091 // abu-abu
 
-        const geometryDevice = new THREE.BoxGeometry(482, 44.2, 562) // 482, 88.4, 562
+        const geometryDevice = new THREE.BoxGeometry(lebarDevice, tinggiDevice, panjangDevice) // 482, 88.4, 562
         const materialDevice = new THREE.MeshBasicMaterial({ color: warnaDevice })
         const cubeDevice = new THREE.Mesh(geometryDevice, materialDevice)
         cubeDevice.position.set(posLeftRightDev, posTopBottomDev, posFrontBackDev)
@@ -128,6 +155,7 @@ function init() {
         const outlineDevice = new THREE.LineSegments(edgesDevice, outlineMaterialDevice)
 
         cubeDevice.add(outlineDevice)
+        cubes.push(cubeDevice)
     }
 
     // ===================================================
