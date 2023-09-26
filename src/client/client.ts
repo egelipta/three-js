@@ -61,10 +61,10 @@ function init() {
     // scene.add(light)
 
     // ========================RACK=======================
-    const posTopBottomRack = 755
     const posLeftRightRack = 0
+    const posTopBottomRack = 755
     const posFrontBackRack = -600
-    const warnaRack = 0x000000
+    const warnaRack = 0x000000 // hitam
 
     const geometryRack = new THREE.BoxGeometry(600, 1900, 1200)
     const materialRack = new THREE.MeshBasicMaterial({
@@ -88,13 +88,41 @@ function init() {
     ]
     const cubeRack = new THREE.Mesh(geometryRack, materialsRack)
     cubeRack.position.set(posLeftRightRack, posTopBottomRack, posFrontBackRack)
+    scene.add(cubeRack)
 
+    // garis tepi (outline) untuk rack
     const edgesRack = new THREE.EdgesGeometry(geometryRack)
-    const outlineMaterialRack = new THREE.LineBasicMaterial({ color: warnaRack, linewidth: 1 })
+    const outlineMaterialRack = new THREE.LineBasicMaterial({
+        color: 0x000000, // Warna hitam
+        linewidth: 1,
+    })
     const outlineRack = new THREE.LineSegments(edgesRack, outlineMaterialRack)
 
     cubeRack.add(outlineRack)
-    scene.add(cubeRack)
+
+    // ===================================================
+
+    // ===================U/DEVICE========================
+    const posLeftRightDev = 0
+    const posTopBottomDev = -150
+    const posFrontBackDev = -300
+    const warnaDevice = 0x919091 //abu-abu
+
+    const geometryDevice = new THREE.BoxGeometry(482, 88.3, 562)
+    const materialDevice = new THREE.MeshBasicMaterial({ color: warnaDevice })
+    const cubeDevice = new THREE.Mesh(geometryDevice, materialDevice)
+    cubeDevice.position.set(posLeftRightDev, posTopBottomDev, posFrontBackDev)
+    scene.add(cubeDevice)
+
+    // Membuat tepi (outline) untuk device
+    const edgesDevice = new THREE.EdgesGeometry(geometryDevice)
+    const outlineMaterialDevice = new THREE.LineBasicMaterial({
+        color: 0x000000, // Warna hitam
+        linewidth: 1,
+    })
+    const outlineDevice = new THREE.LineSegments(edgesDevice, outlineMaterialDevice)
+
+    cubeDevice.add(outlineDevice)
 
     // ===================================================
 
