@@ -33,6 +33,8 @@ const params = {
     removePoint: removePoint,
 }
 
+let selectedCube = null
+
 init()
 
 function init() {
@@ -68,7 +70,7 @@ function init() {
     const materialRack = new THREE.MeshBasicMaterial({
         color: warnaRack,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.8,
     })
 
     const pintu = new THREE.MeshBasicMaterial({
@@ -101,101 +103,114 @@ function init() {
     // ===================================================
 
     // ===================U/DEVICE========================
-    const jumlahCubeDevice = 4 // Jumlah cubeDevice
-    const spacingY = 50 // Jarak antara cubeDevice
-    const lebarDevice = 482
-    const tinggiDevice = 44.2
+    const textureLoader = new THREE.TextureLoader()
+    const warnaDevice = 0x424242 // Warna abu-abu
+    const satuU = 44.2
     const panjangDevice = 562
-    const warnaDevice = 0x6d6b6e
+    const lebarDevice = 482
 
-    const cubes = []
-    const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
+    const raycaster = new THREE.Raycaster()
+    const cubes = []
 
-    function onMouseClick(event: { clientX: number; clientY: number }) {
-        // Hitung koordinat mouse dalam koordinat WebGL
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
+    // Membuat array data dengan konfigurasi untuk 5 cubeDevice
+    const data = [
+        {
+            id: 1,
+            name: 'Blade Server',
+            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuU * 10, panjangDevice),
+            posLeftRightDev: 0,
+            posTopBottomDev: 40,
+            posFrontBackDev: -300,
+            texturePath: 'images/poweredge-m-family.jpg',
+        },
+        {
+            id: 2,
+            name: 'switch 10000',
+            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuU * 1, panjangDevice),
+            posLeftRightDev: 0,
+            posTopBottomDev: 1650,
+            posFrontBackDev: -300,
+            texturePath: 'images/c.jpg',
+        },
+        {
+            id: 3,
+            name: 'SSD SUN Storage',
+            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuU * 2, panjangDevice),
+            posLeftRightDev: 0,
+            posTopBottomDev: 320,
+            posFrontBackDev: -300,
+            texturePath: 'images/ssd-sun-DC.jpg',
+        },
+    ]
 
-        // Perbarui raycaster
-        raycaster.setFromCamera(mouse, camera)
-
-        // Cari objek yang diklik
-        const intersects = raycaster.intersectObjects(cubes)
-
-        // Jika ada objek yang diklik, tampilkan informasi di konsol
-        if (intersects.length > 0) {
-            const clickedObject = intersects[0].object
-            console.log('Clicked ' + cubes.indexOf(clickedObject))
-        }
-    }
-
-    document.addEventListener('click', onMouseClick, false)
-
-    // Fungsi untuk membuat device dengan tekstur hanya di sisi depan
-    function createFrontTexturedCube(
-        width: number,
-        height: number,
-        depth: number,
-        positionX: number,
-        positionY: number,
-        positionZ: number,
-        texturePath: string
-    ) {
-        // Membuat device
-        const geometryDevice = new THREE.BoxGeometry(width, height, depth)
-
-        // Membuat material untuk sisi depan dengan tekstur
-        const textureDevice = new THREE.TextureLoader().load(texturePath)
-        const materialFront = new THREE.MeshBasicMaterial({ map: textureDevice })
-
-        // Membuat material default (tanpa tekstur) untuk sisi lainnya
-        const materialBack = new THREE.MeshBasicMaterial({ color: warnaDevice })
-
-        // Menggunakan array material untuk menerapkan material ke semua sisi kubus
+    data.forEach((config) => {
+        const texture = textureLoader.load(config.texturePath)
+        const materialFront = new THREE.MeshBasicMaterial({ map: texture })
+        const materialOther = new THREE.MeshBasicMaterial({ color: warnaDevice })
         const materials = [
-            materialBack,
-            materialBack,
-            materialBack,
-            materialBack,
-            materialFront,
-            materialBack,
+            materialOther, // kanan
+            materialOther, // kiri
+            materialOther, // atas
+            materialOther, // bawah
+            materialFront, // depan
+            materialOther, // belakang
         ]
+        const cubeDevice = new THREE.Mesh(config.geometryDevice, materials)
 
-        const cubeDevice = new THREE.Mesh(geometryDevice, materials)
-        cubeDevice.position.set(positionX, positionY, positionZ)
+        cubeDevice.position.set(
+            config.posLeftRightDev,
+            config.posTopBottomDev,
+            config.posFrontBackDev
+        )
+        cubes.push(cubeDevice)
         scene.add(cubeDevice)
 
-        // Membuat garis tepi (outline) untuk device
-        const edges = new THREE.EdgesGeometry(geometryDevice)
-        const outlineMaterial = new THREE.LineBasicMaterial({
+        // outline device
+        const edgesDevice = new THREE.EdgesGeometry(config.geometryDevice)
+        const outlineMaterialDevice = new THREE.LineBasicMaterial({
             color: 0x000000, // Warna hitam
             linewidth: 1,
         })
-        const outline = new THREE.LineSegments(edges, outlineMaterial)
+        const outlineDevice = new THREE.LineSegments(edgesDevice, outlineMaterialDevice)
 
-        cubeDevice.add(outline)
+        cubeDevice.add(outlineDevice)
+        cubeDevice.userData.id = config.id
+    })
 
-        cubes.push(cubeDevice)
-    }
+    // Event listener untuk mousemove
+    document.addEventListener('mousemove', (event) => {
+        // Mendapatkan posisi mouse dalam koordinat normalized device coordinates (NDC)
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
 
-    for (let i = 0; i < jumlahCubeDevice; i++) {
-        const posLeftRightDev = 0
-        const posTopBottomDev = -150 + i * spacingY // Sesuaikan posisi Y sesuai indeks
-        const posFrontBackDev = -300
+        // Lakukan raycasting untuk mendeteksi objek yang disorot oleh kursor
+        raycaster.setFromCamera(mouse, camera)
 
-        const texturePath = 'images/c.jpg' // Path ke gambar tekstur
+        const intersects = raycaster.intersectObjects(cubes)
 
-        createFrontTexturedCube(
-            lebarDevice,
-            tinggiDevice,
-            panjangDevice,
-            posLeftRightDev,
-            posTopBottomDev,
-            posFrontBackDev,
-            texturePath
-        )
-    }
+        if (intersects.length > 0) {
+            const hoveredObject = intersects[0].object as THREE.Mesh
+            const hoveredIndex = hoveredObject.userData.id // Menggunakan userData.id yang sudah didefinisikan sebelumnya
+            let hoveredName = ''
+            let hoveredT = ''
+
+            // Cari objek dengan ID yang sesuai dalam array data
+            const foundObject = data.find((item) => item.id === hoveredIndex)
+
+            if (foundObject) {
+                // Jika objek ditemukan, ambil properti
+                hoveredName = foundObject.name
+                hoveredT = foundObject.texturePath
+            }
+
+            const infoDiv = document.getElementById('info')
+            infoDiv.innerHTML = `ID: ${hoveredIndex}<br>Name: ${hoveredName}<br>Path: ${hoveredT}`
+        } else {
+            const infoDiv = document.getElementById('info')
+            infoDiv.textContent = ''
+        }
+    })
 
     // ===================================================
 
