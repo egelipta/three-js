@@ -33,8 +33,6 @@ const params = {
     removePoint: removePoint,
 }
 
-let selectedCube = null
-
 init()
 
 function init() {
@@ -105,7 +103,7 @@ function init() {
     // ===================U/DEVICE========================
     const textureLoader = new THREE.TextureLoader()
     const warnaDevice = 0x424242 // Warna abu-abu
-    const satuU = 44.2
+    const satuanU = 44.2
     const panjangDevice = 562
     const lebarDevice = 482
 
@@ -118,7 +116,8 @@ function init() {
         {
             id: 1,
             name: 'Blade Server',
-            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuU * 10, panjangDevice),
+            instansi: 'Dinas Kesehatan',
+            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuanU * 10, panjangDevice),
             posLeftRightDev: 0,
             posTopBottomDev: 40,
             posFrontBackDev: -300,
@@ -127,7 +126,8 @@ function init() {
         {
             id: 2,
             name: 'switch 10000',
-            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuU * 1, panjangDevice),
+            instansi: 'Dinas Sosial',
+            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuanU * 1, panjangDevice),
             posLeftRightDev: 0,
             posTopBottomDev: 1650,
             posFrontBackDev: -300,
@@ -136,7 +136,8 @@ function init() {
         {
             id: 3,
             name: 'SSD SUN Storage',
-            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuU * 2, panjangDevice),
+            instansi: 'Dinas Pendidikan',
+            geometryDevice: new THREE.BoxGeometry(lebarDevice, satuanU * 2, panjangDevice),
             posLeftRightDev: 0,
             posTopBottomDev: 320,
             posFrontBackDev: -300,
@@ -193,7 +194,7 @@ function init() {
             const hoveredObject = intersects[0].object as THREE.Mesh
             const hoveredIndex = hoveredObject.userData.id // Menggunakan userData.id yang sudah didefinisikan sebelumnya
             let hoveredName = ''
-            let hoveredT = ''
+            let hoveredInstansi = ''
 
             // Cari objek dengan ID yang sesuai dalam array data
             const foundObject = data.find((item) => item.id === hoveredIndex)
@@ -201,14 +202,71 @@ function init() {
             if (foundObject) {
                 // Jika objek ditemukan, ambil properti
                 hoveredName = foundObject.name
-                hoveredT = foundObject.texturePath
+                hoveredInstansi = foundObject.instansi
             }
 
             const infoDiv = document.getElementById('info')
-            infoDiv.innerHTML = `ID: ${hoveredIndex}<br>Name: ${hoveredName}<br>Path: ${hoveredT}`
+            infoDiv.innerHTML = `ID: ${hoveredIndex}<br>Name: ${hoveredName}<br>Instansi: ${hoveredInstansi}`
         } else {
             const infoDiv = document.getElementById('info')
             infoDiv.textContent = ''
+        }
+    })
+
+    let originalCubeColor = 0
+    let selectedCube = null
+
+    document.addEventListener('click', (_event) => {
+        // Kembalikan warna cubeDevice yang sebelumnya diklik
+        if (selectedCube) {
+            selectedCube.material[4].color.setHex(originalCubeColor)
+            selectedCube = null
+        }
+
+        // Lakukan raycasting untuk mendeteksi objek yang diklik
+        raycaster.setFromCamera(mouse, camera)
+
+        const intersects = raycaster.intersectObjects(cubes)
+
+        if (intersects.length > 0) {
+            const clickedObject = intersects[0].object as THREE.Mesh
+
+            // Simpan warna asli cubeDevice yang diklik
+            originalCubeColor = clickedObject.material[4].color.getHex()
+
+            // Ubah warna cubeDevice yang diklik
+            clickedObject.material[4].color.set(0x3afa05) // Misalnya, ubah warna menjadi hijau
+            selectedCube = clickedObject
+
+            // Temukan data cubeDevice berdasarkan ID
+            const clickedData = data.find((item) => item.id === clickedObject.userData.id)
+
+            if (clickedData) {
+                // Gabungkan data menjadi satu string
+                const geometryData = `Width: ${clickedData.geometryDevice.parameters.width}\nHeight: ${clickedData.geometryDevice.parameters.height}\nDepth: ${clickedData.geometryDevice.parameters.depth}`
+                const dataString = `ID: ${clickedData.id}\nName: ${clickedData.name}\nInstansi: ${clickedData.instansi}\nGeometry:\n${geometryData}`
+
+                // Buka tab baru dan tampilkan data
+                const newWindow = window.open('', 'Device Info', 'width=400,height=300')
+                newWindow.document.write(`
+                <h1>Device Info</h1>
+                <table border='solid'>
+                    <tr>
+                        <th>ID</th>
+                        <th>Device Name</th>
+                        <th>Instansi</th>
+                    </tr>
+                    <tr>
+                        <td>${clickedData.id}</td>
+                        <td>${clickedData.name}</td>
+                        <td>${clickedData.instansi}</td>
+                    </tr>
+                    </table>
+                <pre>${dataString}</pre>`)
+                newWindow.document.close()
+            }
+
+            console.log(`${clickedData.id}`)
         }
     })
 
